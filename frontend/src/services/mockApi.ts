@@ -123,13 +123,13 @@ export const mockInvoiceService = {
       due_date: data.due_date,
       payment_terms: data.payment_terms,
       status: 'draft',
-      subtotal: String(subtotal.toFixed(2)),
+      subtotal: Number(subtotal.toFixed(2)),
       tax_rate: data.tax_rate || 0,
-      tax_amount: String(taxAmount.toFixed(2)),
+      tax_amount: Number(taxAmount.toFixed(2)),
       discount_type: data.discount_type || undefined,
       discount_value: data.discount_value || undefined,
-      discount_amount: String(discountAmount.toFixed(2)),
-      total: String(total.toFixed(2)),
+      discount_amount: Number(discountAmount.toFixed(2)),
+      total: Number(total.toFixed(2)),
       notes: data.notes || '',
       client: mockClients.find(c => c.id === data.client_id) || mockClients[0],
       line_items: data.line_items.map((item, idx) => ({
@@ -152,16 +152,51 @@ export const mockInvoiceService = {
     const index = mockInvoices.findIndex(inv => inv.id === id);
     if (index === -1) throw new Error('Invoice not found');
     
+    const invoice = mockInvoices[index];
+    
+    // Update status if provided
     if (data.status) {
-      mockInvoices[index].status = data.status;
+      invoice.status = data.status;
     }
     
-    mockInvoices[index] = {
-      ...mockInvoices[index],
-      ...data,
-      updated_at: new Date().toISOString(),
-    };
-    return mockInvoices[index];
+    // Update other fields
+    if (data.client_id) invoice.client_id = data.client_id;
+    if (data.issue_date) invoice.issue_date = data.issue_date;
+    if (data.due_date) invoice.due_date = data.due_date;
+    if (data.payment_terms) invoice.payment_terms = data.payment_terms;
+    if (data.tax_rate !== undefined) invoice.tax_rate = data.tax_rate;
+    if (data.discount_type !== undefined) invoice.discount_type = data.discount_type;
+    if (data.discount_value !== undefined) invoice.discount_value = data.discount_value;
+    if (data.notes !== undefined) invoice.notes = data.notes;
+    
+    // Update line items if provided
+    if (data.line_items) {
+      invoice.line_items = data.line_items.map((item, idx) => ({
+        id: String(idx + 1),
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.quantity * item.rate,
+        created_at: new Date().toISOString(),
+      }));
+      
+      // Recalculate totals
+      const subtotal = invoice.line_items.reduce((sum, item) => sum + item.amount, 0);
+      const discountAmount = invoice.discount_type === 'percentage'
+        ? (subtotal * (invoice.discount_value || 0) / 100)
+        : (invoice.discount_value || 0);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * invoice.tax_rate / 100;
+      const total = afterDiscount + taxAmount;
+      
+      invoice.subtotal = Number(subtotal.toFixed(2));
+      invoice.discount_amount = Number(discountAmount.toFixed(2));
+      invoice.tax_amount = Number(taxAmount.toFixed(2));
+      invoice.total = Number(total.toFixed(2));
+    }
+    
+    invoice.updated_at = new Date().toISOString();
+    return invoice;
   },
 
   delete: async (id: string): Promise<void> => {
