@@ -7,17 +7,14 @@ import {
   Toolbar,
   List,
   Typography,
-  Divider,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   useTheme,
   useMediaQuery,
-  IconButton,
   Avatar,
   Tooltip,
-  Badge,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
