@@ -30,18 +30,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
-    }
+    // Auto-login for demo purposes
+    const demoUser = {
+      id: '1',
+      email: 'demo@invoiceflow.com',
+      name: 'Demo User',
+    };
+    setUser(demoUser);
+    localStorage.setItem('user', JSON.stringify(demoUser));
+    localStorage.setItem('token', 'mock-token');
     setLoading(false);
   }, []);
 
