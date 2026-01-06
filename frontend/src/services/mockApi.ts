@@ -105,23 +105,38 @@ export const mockInvoiceService = {
   create: async (data: CreateInvoiceDTO): Promise<Invoice> => {
     await delay(500);
     const invoiceNumber = `INV-2026-${String(mockInvoices.length + 1).padStart(4, '0')}`;
+    
+    // Calculate totals
+    const subtotal = data.line_items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    const discountAmount = data.discount_type === 'percentage' 
+      ? (subtotal * (data.discount_value || 0) / 100)
+      : (data.discount_value || 0);
+    const afterDiscount = subtotal - discountAmount;
+    const taxAmount = afterDiscount * (data.tax_rate || 0) / 100;
+    const total = afterDiscount + taxAmount;
+    
     const newInvoice: Invoice = {
       id: String(mockInvoices.length + 1),
       invoice_number: invoiceNumber,
-      ...data,
-      client: mockClients.find(c => c.id === data.client_id) || mockClients[0],
+      client_id: data.client_id,
+      issue_date: data.issue_date,
+      due_date: data.due_date,
+      payment_terms: data.payment_terms,
       status: 'draft',
-      subtotal: '0',
+      subtotal: String(subtotal.toFixed(2)),
       tax_rate: data.tax_rate || 0,
-      tax_amount: '0',
-      discount_type: data.discount_type || null,
-      discount_value: data.discount_value || null,
-      discount_amount: '0',
-      total: '0',
+      tax_amount: String(taxAmount.toFixed(2)),
+      discount_type: data.discount_type || undefined,
+      discount_value: data.discount_value || undefined,
+      discount_amount: String(discountAmount.toFixed(2)),
+      total: String(total.toFixed(2)),
       notes: data.notes || '',
+      client: mockClients.find(c => c.id === data.client_id) || mockClients[0],
       line_items: data.line_items.map((item, idx) => ({
         id: String(idx + 1),
-        ...item,
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
         amount: item.quantity * item.rate,
         created_at: new Date().toISOString(),
       })),
