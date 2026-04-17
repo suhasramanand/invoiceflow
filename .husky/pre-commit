@@ -12,3 +12,4 @@ npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
 
 echo "Pre-commit checks passed!"
 
+

@@ -13,3 +13,4 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html']
 };
 
+

@@ -331,3 +331,4 @@ const InvoiceDetailPage: React.FC = () => {
 
 export default InvoiceDetailPage;
 
+
